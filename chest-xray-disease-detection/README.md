@@ -1,278 +1,318 @@
 # Chest X-Ray Disease Detection
 
-A deep learning-based multi-label classification system for detecting multiple thoracic diseases from chest X-ray images using **DenseNet121**. The project includes a complete training pipeline, a pretrained model, a Gradio-based inference interface, and Grad-CAM visualization for model interpretability.
+Deep learning-based multi-label chest X-ray disease classification using DenseNet121, Transfer Learning, and a Gradio inference interface with Grad-CAM visualization.
 
-> **Note:** This project was developed as an academic and educational machine learning project. It is not intended for clinical diagnosis or direct medical decision-making.
+## Project Overview
 
----
+This project implements a multi-label deep learning system for detecting multiple thoracic conditions from chest X-ray images.
 
-# Project Overview
+The system uses a pretrained **DenseNet121** model and was developed as a research and educational project to explore medical image classification, transfer learning, class imbalance handling, model evaluation, and model interpretability.
 
-Chest X-ray imaging is one of the most widely used medical imaging modalities for examining thoracic conditions. A single X-ray image may contain evidence of more than one abnormality, making **multi-label classification** an important task in medical image analysis.
+The project also includes a **Gradio-based interface** for image inference and Grad-CAM visualization.
 
-This project implements a deep learning system capable of analyzing chest X-ray images and predicting the presence of multiple thoracic conditions simultaneously.
-
-The system uses **DenseNet121 with transfer learning** and is trained on the **NIH ChestX-ray14** dataset. A dedicated Gradio interface is provided for model inference, while Grad-CAM is used to provide visual explanations of the model's predictions.
-
-The project demonstrates an end-to-end Medical AI workflow covering:
-
-* Medical image preprocessing
-* Multi-label classification
-* Transfer learning
-* Model training and evaluation
-* Threshold optimization
-* Model inference
-* Explainable AI using Grad-CAM
-* Interactive deployment using Gradio
+> **Disclaimer:** This project is intended for educational and research purposes only. It is not a clinically validated diagnostic system and must not be used for medical diagnosis or clinical decision-making.
 
 ---
 
-# Key Features
+## Key Features
 
-* Multi-label chest X-ray disease classification.
-* DenseNet121-based deep learning architecture.
-* Transfer learning using pretrained ImageNet weights.
-* Training with class-imbalance handling.
-* BCEWithLogitsLoss with positive-class weighting.
-* Individual prediction thresholds for different labels.
-* ROC-AUC and F1-based model evaluation.
-* Grad-CAM visualization for model interpretability.
-* Interactive Gradio inference interface.
-* Pretrained model available through GitHub Releases.
-* Complete training and inference code.
-* Reproducible Python environment through `requirements.txt`.
+* Multi-label chest X-ray classification
+* DenseNet121 with ImageNet pretrained weights
+* Transfer learning and partial fine-tuning
+* 15 thoracic disease/condition labels
+* Class-imbalance handling using weighted BCE loss
+* Class-specific prediction threshold optimization
+* Macro F1-score and ROC-AUC evaluation
+* Gradio-based inference interface
+* Grad-CAM model interpretability visualization
+* Pretrained model distributed through GitHub Releases
+* Training and deployment notebooks included
 
 ---
 
-# Diseases / Labels
+## Disease / Condition Labels
 
 The model predicts the following 15 labels:
 
-| #  | Label              |
-| -- | ------------------ |
-| 1  | Atelectasis        |
-| 2  | Cardiomegaly       |
-| 3  | Consolidation      |
-| 4  | Edema              |
-| 5  | Effusion           |
-| 6  | Emphysema          |
-| 7  | Fibrosis           |
-| 8  | Hernia             |
-| 9  | Infiltration       |
-| 10 | Mass               |
-| 11 | Nodule             |
-| 12 | Pleural Thickening |
-| 13 | Pneumonia          |
-| 14 | Pneumothorax       |
-| 15 | No Finding         |
+1. Atelectasis
+2. Cardiomegaly
+3. Consolidation
+4. Edema
+5. Effusion
+6. Emphysema
+7. Fibrosis
+8. Hernia
+9. Infiltration
+10. Mass
+11. Nodule
+12. Pleural Thickening
+13. Pneumonia
+14. Pneumothorax
+15. No Finding
 
 ---
 
-# Dataset
+## Dataset
 
-The project is based on the **NIH ChestX-ray14** dataset.
+The project uses the **NIH ChestX-ray14** dataset.
 
-The dataset contains chest X-ray images annotated with multiple thoracic disease labels and is commonly used for research in medical image classification.
+The dataset contains chest X-ray images annotated with multiple thoracic conditions. The version used during development consisted of images resized to **224 × 224 pixels**.
 
-The original dataset is **not included in this repository** because of its size and dataset distribution considerations.
+The dataset used in the project was divided into:
 
-Users wishing to reproduce the training process should obtain the dataset from its official/research distribution source and configure the dataset paths according to the training code.
+| Split      |      Images |
+| ---------- | ----------: |
+| Training   |      78,484 |
+| Validation |      16,818 |
+| Test       |      16,818 |
+| **Total**  | **112,120** |
+
+The dataset itself is **not included in this repository** because of its size and distribution considerations.
 
 ---
 
-# Model Architecture
+## Model Architecture
 
-The project uses **DenseNet121** with transfer learning.
+### Backbone
 
-The original ImageNet classification head is replaced with a fully connected layer producing 15 outputs corresponding to the target labels.
+**DenseNet121**
 
-The model performs multi-label classification using independent output probabilities for each disease.
+The model was initialized using ImageNet pretrained weights.
 
-### Architecture Overview
+The original classifier was replaced with a fully connected layer producing 15 outputs:
 
 ```text
-Chest X-Ray Image
-        │
-        ▼
-Image Preprocessing
-        │
-        ▼
-DenseNet121
-        │
-        ▼
-Feature Extraction
-        │
-        ▼
-Fully Connected Layer
-        │
-        ▼
-15 Independent Outputs
-        │
-        ▼
-Disease Predictions
+Linear(1024, 15)
 ```
 
----
+Because the task is multi-label classification, each output represents an independent condition.
 
-# Training
+### Fine-Tuning
 
-The training pipeline includes:
-
-* Image resizing and normalization.
-* Data augmentation for training images.
-* Transfer learning using DenseNet121.
-* Partial freezing of the pretrained network.
-* Class-imbalance handling using positive-class weighting.
-* BCEWithLogitsLoss.
-* AdamW optimization.
-* Learning-rate scheduling.
-* Validation monitoring.
-* F1-score and ROC-AUC evaluation.
-* Early stopping / best-model selection.
-
-The main training code is provided in the repository under the training-related files.
+Most of the pretrained feature extractor was frozen while selected deeper DenseNet layers and the classification head were fine-tuned for the chest X-ray task.
 
 ---
 
-# Model Performance
+## Training
 
-The model was evaluated using multi-label classification metrics, with particular emphasis on **F1-score** and **ROC-AUC**.
+### Loss Function
 
-The final trained model and evaluation information are provided as part of the project files and documentation.
+The model was trained using:
 
-Because medical datasets are highly imbalanced, accuracy alone is not considered an adequate primary evaluation metric for this task.
+```text
+BCEWithLogitsLoss
+```
+
+with class-specific positive weights to help address the imbalance between the different labels.
+
+### Optimizer
+
+```text
+AdamW
+```
+
+with:
+
+```text
+Learning Rate: 3e-5
+Weight Decay: 1e-5
+```
+
+### Learning-Rate Scheduler
+
+```text
+ReduceLROnPlateau
+```
+
+The training process included validation-based model selection and checkpointing.
 
 ---
 
-# Pretrained Model
+## Data Preprocessing and Augmentation
 
-A pretrained version of the trained model is provided through the project's GitHub Release.
+Training images were processed using transformations including:
+
+* Resize to 256 × 256
+* Random crop to 224 × 224
+* Random horizontal flip
+* Small random rotation
+* Tensor conversion
+* ImageNet normalization
+
+Validation and inference preprocessing used the required 224 × 224 input size followed by normalization.
+
+---
+
+## Model Performance
+
+The best recorded validation performance was:
+
+| Metric         |     Result |
+| -------------- | ---------: |
+| Macro F1-score | **0.3597** |
+| Macro ROC-AUC  | **0.8214** |
+| Best Epoch     |     **24** |
+
+The reported F1-score corresponds to the best validation result used during model selection.
+
+The test set was also prepared and used for inference, but a separate final test metric was not retained as part of the final reported experiment. Therefore, no test F1-score is claimed here.
+
+---
+
+## Class-Specific Thresholds
+
+Instead of using a single probability threshold of 0.5 for every class, individual thresholds were optimized for the different labels using validation data.
+
+The thresholds used by the final inference interface are:
+
+```text
+[0.35, 0.35, 0.45, 0.40, 0.30,
+ 0.40, 0.30, 0.45, 0.35, 0.40,
+ 0.35, 0.30, 0.25, 0.40, 0.50]
+```
+
+The threshold for **No Finding** is:
+
+```text
+0.50
+```
+
+This approach was used to account for differences in class prevalence and prediction behavior across the labels.
+
+---
+
+## Pretrained Model
+
+The trained model is distributed separately through a **GitHub Release** because the model file is too large for convenient storage in the repository itself.
 
 ### Download
 
-**[Download the pretrained `best_model.pth`](https://github.com/AliEbaa/chest-xray-disease-detection/releases/latest/download/best_model.pth)**
+**Model:** `best_model.pth`
 
-After downloading the model, place it in the following location:
+[Download the pretrained model from the latest GitHub Release](https://github.com/AliEbaa/chest-xray-disease-detection/releases/latest/download/best_model.pth)
+
+The current release is:
+
+**v1.0.0 — Initial Release**
+
+After downloading the model, place it locally at:
 
 ```text
 models/
 └── best_model.pth
 ```
 
-The pretrained model can then be loaded by the inference/deployment code.
-
-### Release
-
-The current model release is:
-
-**v1.0.0 – Initial Release**
+The model checkpoint contains the trained model parameters and supporting information used by the inference workflow.
 
 ---
 
-# Gradio Interface
+## Gradio Interface
 
-The project includes an interactive **Gradio** interface for testing the trained model.
+The project includes a Gradio-based interface for running inference with the trained model.
 
-The interface allows users to:
+The interface provides:
 
-1. Upload a chest X-ray image.
-2. Preprocess the image.
-3. Run inference using the trained DenseNet121 model.
-4. Display predicted conditions.
-5. Apply the optimized prediction thresholds.
-6. Generate Grad-CAM visualizations for model interpretability.
+* Chest X-ray image input
+* Image preprocessing
+* Model inference
+* Multi-label predictions
+* Class-specific thresholds
+* Prediction visualization
+* Grad-CAM visualization
 
-The interface-related code is included in the repository.
-
----
-
-# Grad-CAM Interpretability
-
-Grad-CAM (**Gradient-weighted Class Activation Mapping**) is used to provide a visual explanation of model predictions.
-
-The technique generates a heatmap highlighting image regions that contributed to a particular prediction.
-
-This provides an additional interpretability layer and allows the user to inspect which areas of the chest X-ray influenced the model's output.
-
-> Grad-CAM visualizations are intended for model interpretability and debugging. They should not be interpreted as clinically validated localization of disease.
-
-Example Grad-CAM outputs and other project images are available in the repository's image/result directories.
+The interface can be run locally after installing the required dependencies and downloading the pretrained model.
 
 ---
 
-# Project Demonstration
+## Grad-CAM Interpretability
 
-A short demonstration of the Gradio interface and model inference is available on YouTube:
+The project includes **Grad-CAM (Gradient-weighted Class Activation Mapping)** to visualize image regions that contributed to a model prediction.
 
-**[Watch the Project Demonstration](https://www.youtube.com/watch?v=Y9kDzoX49wA)**
+Grad-CAM is included as a model interpretability technique to help inspect model behavior.
+
+> **Important:** Grad-CAM visualizations should not be interpreted as clinically validated disease localization or as evidence that the highlighted region represents the true anatomical location of a disease.
+
+An example visualization is included in:
+
+```text
+results/gradcam/
+```
 
 ---
 
-# Repository Structure
+## Project Demonstration
+
+A short demonstration of the Gradio interface is available on YouTube:
+
+[Watch the project demonstration](https://www.youtube.com/watch?v=Y9kDzoX49wA)
+
+---
+
+## Repository Structure
 
 ```text
 chest-xray-disease-detection/
 │
 ├── training/
-│   └── Training_Notebook.ipynb
+│   └── training_code.ipynb
 │
 ├── deployment/
-│   └── Interface_Notebook.ipynb
-│
-├── models/
-│   └── best_model.pth
-│
-├── results/
-│   └── gradcam/
-│
-├── images/
-│   ├── system_architecture.png
-│   └── interface.png
+│   └── My_Model_Interface.ipynb
 │
 ├── documentation/
-│   └── Project_Report.pdf
+│   └── chest-xray-disease-detection.pdf
+│
+├── images/
+│   ├── interface.png
+│   └── system_architecture.jfif
+│
+├── results/
+│   └── Grad-Cam/
+│       └── Grad-Cam.jpeg
 │
 ├── requirements.txt
 ├── README.md
 └── LICENSE
 ```
 
-> **Note:** The pretrained `best_model.pth` file is distributed through GitHub Releases rather than stored directly in the repository because of GitHub's file-upload limitations.
+> **Note:** `best_model.pth` is distributed through the GitHub Release and is not stored directly in the repository.
 
 ---
 
-# Installation
+## Installation
 
-## 1. Clone the Repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/AliEbaa/chest-xray-disease-detection.git
 cd chest-xray-disease-detection
 ```
 
-## 2. Install Dependencies
-
-It is recommended to use a virtual environment.
+### 2. Create a Virtual Environment
 
 ```bash
 python -m venv .venv
 ```
 
-Activate the environment on Windows:
+Activate it on Windows:
 
 ```bash
 .venv\Scripts\activate
 ```
 
-Install the required packages:
+On Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-# Using the Pretrained Model
+### 4. Download the Model
 
 Download:
 
@@ -280,175 +320,203 @@ Download:
 best_model.pth
 ```
 
-from the project's GitHub Release and place it inside:
+from the GitHub Release and place it in:
 
 ```text
 models/
 ```
 
-The resulting structure should be:
+The resulting local structure should be:
 
 ```text
 models/
 └── best_model.pth
 ```
 
-Then run the provided inference/deployment code.
-
 ---
 
-# Training the Model
+## Using the Pretrained Model
 
-Users who wish to reproduce the training process can use the provided training code.
+The deployment notebook contains the inference workflow.
 
 The general workflow is:
 
 ```text
-NIH ChestX-ray14 Dataset
-          │
-          ▼
-Data Preparation
-          │
-          ▼
-Image Preprocessing
-          │
-          ▼
-Data Augmentation
-          │
-          ▼
-DenseNet121 Transfer Learning
-          │
-          ▼
-Model Training
-          │
-          ▼
-Validation
-          │
-          ▼
-Threshold Optimization
-          │
-          ▼
-Best Model
+Chest X-ray Image
+        ↓
+Preprocessing
+        ↓
+DenseNet121
+        ↓
+15 Independent Predictions
+        ↓
+Class-Specific Thresholds
+        ↓
+Predicted Conditions
+        ↓
+Grad-CAM Visualization
 ```
 
-Before training, configure the dataset paths according to the environment being used.
+---
 
-The pretrained model is provided separately for users who only want to perform inference without retraining the network.
+## Training the Model
+
+The training notebook is available under:
+
+```text
+training/
+```
+
+It contains the main workflow for:
+
+1. Dataset preparation
+2. Image preprocessing
+3. Data splitting
+4. Model initialization
+5. Transfer learning
+6. Weighted loss configuration
+7. Model training
+8. Validation
+9. Threshold optimization
+10. Model evaluation
+11. Checkpoint saving
+
+The NIH ChestX-ray14 dataset must be obtained separately.
 
 ---
 
-# Inference Workflow
+## Technologies Used
 
-The inference process follows:
+### Machine Learning
 
-1. Load the trained DenseNet121 model.
-2. Load a chest X-ray image.
-3. Apply the required preprocessing.
-4. Perform model inference.
-5. Apply the predefined prediction thresholds.
-6. Display predicted labels.
-7. Generate Grad-CAM visualization when requested.
+* Python
+* PyTorch
+* Torchvision
+* DenseNet121
+* Transfer Learning
+* Multi-label Classification
+* BCEWithLogitsLoss
+* AdamW
+* ReduceLROnPlateau
 
----
+### Computer Vision
 
-# Technologies Used
+* OpenCV
+* PIL
+* Grad-CAM
+* Image preprocessing and augmentation
 
-| Technology   | Purpose                                   |
-| ------------ | ----------------------------------------- |
-| Python       | Main programming language                 |
-| PyTorch      | Deep learning framework                   |
-| Torchvision  | DenseNet121 and image processing          |
-| NumPy        | Numerical processing                      |
-| Pandas       | Dataset and tabular data processing       |
-| OpenCV       | Image processing                          |
-| PIL          | Image loading and preprocessing           |
-| Matplotlib   | Visualization                             |
-| Gradio       | Interactive inference interface           |
-| Google Colab | Development and model training            |
-| GitHub       | Version control and project documentation |
+### Evaluation
 
----
+* F1-score
+* ROC-AUC
+* Precision-Recall analysis
+* Class-specific threshold optimization
 
-# Engineering and Machine Learning Challenges
+### Deployment
 
-Several challenges were addressed during the development of the project, including:
+* Gradio
 
-* Handling a highly imbalanced medical imaging dataset.
-* Designing a multi-label classification pipeline.
-* Selecting appropriate evaluation metrics.
-* Optimizing individual prediction thresholds.
-* Adapting DenseNet121 for multi-label classification.
-* Managing computational limitations during model training.
-* Developing an interactive inference interface.
-* Adding model interpretability using Grad-CAM.
+### Development Environment
+
+* Google Colab
+* Jupyter Notebook
 
 ---
 
-# Limitations
+## Engineering and Machine Learning Challenges
+
+The main challenges addressed during development included:
+
+### Multi-Label Classification
+
+A single chest X-ray can contain multiple conditions simultaneously, requiring independent predictions for each label rather than conventional single-class classification.
+
+### Class Imbalance
+
+The prevalence of different conditions varies considerably. Weighted binary cross-entropy was therefore used to reduce the effect of class imbalance during training.
+
+### Threshold Selection
+
+A single threshold does not necessarily provide suitable behavior for every class. Individual thresholds were optimized using validation data.
+
+### Model Interpretability
+
+Grad-CAM was incorporated to provide a visual interpretation of model predictions and help inspect model behavior.
+
+### Deployment
+
+The trained model was integrated into a lightweight Gradio interface to demonstrate an end-to-end inference workflow.
+
+---
+
+## Limitations
 
 This project has several important limitations:
 
-* The model is trained for research and educational purposes.
+* The system is a research and educational prototype.
 * It has not undergone clinical validation.
-* Predictions should not be used as a substitute for professional medical diagnosis.
-* Dataset imbalance may affect performance across different diseases.
-* Model performance may vary on images from different institutions, devices, or patient populations.
-* The reported performance should not be interpreted as evidence of clinical effectiveness.
+* It should not be used for diagnosis or clinical decision-making.
+* Performance varies between different disease labels.
+* The dataset may contain biases and annotation limitations.
+* The model was trained and evaluated on a specific dataset distribution.
+* External validation on independent datasets was not performed.
+* Grad-CAM provides interpretability visualization but does not constitute clinically validated localization.
+* The reported performance should not be interpreted as clinical diagnostic performance.
 
 ---
 
-# Future Improvements
+## Future Improvements
 
-Potential future developments include:
+Potential future improvements include:
 
-* Training with larger and more diverse medical datasets.
-* External validation on independent datasets.
-* Improved calibration of model probabilities.
-* More advanced explainability techniques.
-* Model optimization for deployment on edge devices.
-* Integration with medical imaging standards such as DICOM.
-* Development of a more complete medical AI deployment pipeline.
-* Clinical validation and prospective evaluation.
-
----
-
-# Documentation
-
-Additional project documentation, including the complete graduation project report, is available in the repository.
-
-The documentation provides further information about:
-
-* Dataset preparation
-* Methodology
-* Model architecture
-* Training process
-* Evaluation
-* Interface implementation
-* Experimental results
-* System limitations
+* External validation using independent datasets
+* More systematic hyperparameter optimization
+* Improved class-imbalance strategies
+* Comparison with additional architectures
+* Calibration analysis
+* More comprehensive test-set evaluation
+* Robustness and distribution-shift testing
+* Improved model interpretability methods
+* Deployment optimization for practical inference environments
 
 ---
 
-# Author
+## Documentation
 
-**Ali Ebaa Hasan**
+The complete academic project report is available in:
+
+```text
+documentation/
+```
+
+The repository documentation is intended to provide a concise technical overview, while the full report contains additional academic and project-development details.
+
+---
+
+## Author
+
+**Ali Ebaa**
 
 Biomedical Engineering
 
-University of Latakia, Syria
-
 GitHub:
 
-**[AliEbaa](https://github.com/AliEbaa)**
+https://github.com/AliEbaa
 
 ---
 
-# License
+## License
 
 This project is released under the **MIT License**.
 
-See the [`LICENSE`](LICENSE) file for details.
+See [`LICENSE`](LICENSE) for details.
 
 ---
 
-# Disclaimer
+## Disclaimer
+
+This project is provided for **educational and research purposes only**.
+
+It is not a medical device, has not been clinically validated, and must not be used to diagnose, treat, or make clinical decisions about patients.
+
